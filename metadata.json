@@ -1,0 +1,6 @@
+{
+  "name": "Lyrics Stage Sync",
+  "description": "Exibe letras em fontes gigantes para cantores lerem de longe em tablets, com sincronização em tempo real via microfone por aproximação vocal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
