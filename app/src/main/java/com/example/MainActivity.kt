@@ -115,6 +115,7 @@ fun LyricsStageApp() {
     var selectedTab by remember { mutableStateOf(0) }
     var showQuickSettings by remember { mutableStateOf(false) }
     var isFullscreenStageMode by remember { mutableStateOf(false) }
+    var songToDelete by remember { mutableStateOf<Song?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -153,6 +154,37 @@ fun LyricsStageApp() {
                     // Optional: Open Settings?
                 }) {
                     Text("Entendido")
+                }
+            }
+        )
+    }
+
+    // Deletion Confirmation Dialog
+    if (songToDelete != null) {
+        val song = songToDelete!!
+        AlertDialog(
+            onDismissRequest = { songToDelete = null },
+            title = { Text("Excluir música?", fontWeight = FontWeight.Bold, color = Color.White) },
+            text = { Text("Tem certeza que deseja apagar a música \"${song.title}\"? Esta ação é definitiva e não poderá ser desfeita.", color = Color.LightGray) },
+            containerColor = Color(0xFF1E2130),
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteSong(song)
+                        songToDelete = null
+                        // If we are on mobile, reset prompter screen if deleting the currently selected song
+                        if (selectedSong?.id == song.id) {
+                            showPrompterOnMobile = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFA5A5A))
+                ) {
+                    Text("Excluir", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { songToDelete = null }) {
+                    Text("Cancelar", color = Color.White)
                 }
             }
         )
@@ -333,6 +365,9 @@ fun LyricsStageApp() {
                                     onClick = {
                                         viewModel.selectSong(song)
                                         showPrompterOnMobile = true
+                                    },
+                                    onDeleteClick = {
+                                        songToDelete = song
                                     }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -722,7 +757,7 @@ fun LyricsStageApp() {
                                         }
 
                                         IconButton(
-                                            onClick = { viewModel.deleteCurrentSong() },
+                                            onClick = { songToDelete = song },
                                             modifier = Modifier.background(Color(0xFF291515), CircleShape)
                                         ) {
                                             Icon(Icons.Default.Delete, contentDescription = "Excluir", tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
@@ -1077,7 +1112,8 @@ fun LyricsStageApp() {
 fun SongGridItem(
     song: Song,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
@@ -1144,6 +1180,23 @@ fun SongGridItem(
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text("USER", color = Color(0xFFD3A3FF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            if (onDeleteClick != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier
+                        .background(Color(0xFF291515), CircleShape)
+                        .size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Excluir Música",
+                        tint = Color(0xFFFF5252),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

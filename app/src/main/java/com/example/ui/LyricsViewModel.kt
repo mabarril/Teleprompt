@@ -312,17 +312,24 @@ class LyricsViewModel(application: Application) : AndroidViewModel(application) 
 
     fun deleteCurrentSong() {
         val song = selectedSong.value ?: return
+        deleteSong(song)
+    }
+
+    fun deleteSong(song: Song) {
         viewModelScope.launch {
-            stopAutoplay()
-            stopListening()
+            if (selectedSong.value?.id == song.id) {
+                stopAutoplay()
+                stopListening()
+                _selectedSongId.value = null
+            }
             repository.deleteSong(song)
-            _selectedSongId.value = null
             
             // Auto select first remaining song
-            val list = songs.value
-            if (list.isNotEmpty()) {
-                val nextSong = list.firstOrNull { it.id != song.id } ?: list.first()
-                selectSong(nextSong)
+            if (selectedSong.value == null || selectedSong.value?.id == song.id) {
+                val list = songs.value.filter { it.id != song.id }
+                if (list.isNotEmpty()) {
+                    selectSong(list.first())
+                }
             }
         }
     }
